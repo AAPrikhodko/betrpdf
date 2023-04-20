@@ -1,26 +1,30 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useEffect, useRef, useState} from 'react';
+import {DataService} from "./api/data";
+import {PDFService} from "./api/pdf";
+import {FormService} from "./api/formFields";
+import {IPdfData} from "./services/types";
 import './App.css';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const viewer = useRef<HTMLDivElement>(null);
+    const [pdfData, setPdfData] = useState<IPdfData | undefined>(undefined)
+
+    useEffect(() => {
+        Promise.all([
+            DataService.getData(),
+            PDFService.getWebViewer(viewer)
+        ]).then((response) => {
+            setPdfData(response[0].data[0])
+            FormService.addFields(response[0].data[0], response[1])
+        }).catch(err => alert(err))
+    }, [])
+
+    return (
+        <div className="wrapper">
+            <div className="header">{pdfData?.title}</div>
+            <div className="viewer" ref={viewer} />
+        </div>
+    );
 }
 
 export default App;
